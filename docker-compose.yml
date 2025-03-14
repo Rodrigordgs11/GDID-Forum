@@ -12,30 +12,30 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # backend:
-  #   build: ./backend
-  #   container_name: backend_forum
-  #   restart: always
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     DB_USER: ${DB_USER}
-  #     DB_PASSWORD: ${DB_PASSWORD}
-  #     DB_NAME: ${DB_NAME}
-  #     DB_HOST: ${DB_HOST}
-  #     DB_PORT: ${DB_PORT}
-  #   ports:
-  #     - "3003:3003"
-  #   volumes:
-  #     - ./backend:/app
-  #     - /app/node_modules
+  backend:
+    build: ./backend
+    container_name: backend_forum
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
   frontend:
     build: ./frontend
     container_name: frontend_forum
     restart: always
-    # depends_on:
-    #   - backend
+    depends_on:
+      - backend
     ports:
       - "8282:80"
     volumes:
