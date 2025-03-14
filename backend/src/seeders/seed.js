@@ -3,28 +3,29 @@ const Users = require("../models/User");
 const Roles = require("../models/Role");
 
 const seed = async () => {
-    await sequelize.sync({ force: true });
+    try {
+        await sequelize.sync({ force: true });
 
-    const roles = [
-        { name: "customer" },
-        { name: "admin" }
-    ];
+        const roles = await Promise.all([
+            Roles.create({ name: "customer" }),
+            Roles.create({ name: "admin" })
+        ]);
 
-    const users = [
-        { username: "user", password: "user", roleId: "1" },
-        { username: "rodrigordgs11", password: "rodrigo", roleId: "2" },
-        { username: "pedroslv05", password: "pedro", roleId: "2" }
-    ];
+        const customerRole = roles.find(role => role.name === "customer");
+        const adminRole = roles.find(role => role.name === "admin");
 
-    for (let role of roles) {
-        await Roles.create(role);
+        const users = [
+            { username: "user", password: "user", roleId: customerRole.id },
+            { username: "rodrigordgs11", password: "rodrigo", roleId: adminRole.id },
+            { username: "pedroslv05", password: "pedro", roleId: adminRole.id }
+        ];
+
+        await Users.bulkCreate(users);
+
+        console.log("Database seeded successfully.");
+    } catch (error) {
+        console.error("Error seeding database:", error);
     }
-
-    for (let user of users) {
-        await Users.create(user);
-    }
-
-    console.log("Database seeded successfully.");
 }
 
 module.exports = seed;

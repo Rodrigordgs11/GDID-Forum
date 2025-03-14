@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { sequelize } = require('./src/config/database');
 const userRoutes = require('./src/routes/userRoutes');
-//const seed = require('./src/seeders/seed');
+const seed = require('./src/seeders/seed');
 require('./src/models/relationships');
 
 const app = express();
@@ -32,4 +32,4 @@ app.get("/", function(req, res) {
 });
 
 const PORT = process.env.PORT || 3003;
-app.listen(PORT, () => console.log(`Backend E-commerce running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Backend Forum is running on port ${PORT}`));
