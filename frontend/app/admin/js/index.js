@@ -13,7 +13,7 @@ function protectedRoute() {
     const headers = new Headers();
     headers.append("Authorization", `Bearer ${access_token}`);
 
-    fetch("http://localhost:3003/protected", {
+    fetch("http://localhost:3003/protected-admin", {
         method: "GET",
         headers: headers,
     })
