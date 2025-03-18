@@ -1,4 +1,8 @@
 /* stylelint-disable @stylistic/selector-list-comma-newline-after */
+.form-control:focus {
+  border-color: #28a745 !important; /* Green border */
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.5) !important; /* Soft green glow */
+}
 
 .blog-header-logo {
   font-family: "Playfair Display", Georgia, "Times New Roman", serif/*rtl:Amiri, Georgia, "Times New Roman", serif*/;

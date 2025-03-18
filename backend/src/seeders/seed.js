@@ -15,12 +15,14 @@ const seed = async () => {
         const adminRole = roles.find(role => role.name === "admin");
 
         const users = [
-            { username: "user", password: "user", roleId: customerRole.id },
-            { username: "rodrigordgs11", password: "rodrigo", roleId: adminRole.id },
-            { username: "pedroslv05", password: "pedro", roleId: adminRole.id }
+            { name: "user", password: "user", email: "user@gmail.com", phone: "123456789", roleId: customerRole.id },
+            { name: "rodrigordgs11", password: "rodrigo", email: "rodrigo@gmail.com", phone: "123456789", roleId: adminRole.id },
+            { name: "pedroslv05", password: "pedro", email: "pedro@gmail.com", phone: "123456789", roleId: adminRole.id },
         ];
 
-        await Users.bulkCreate(users);
+        for (const user of users) {
+            await Users.create(user);
+        }
 
         console.log("Database seeded successfully.");
     } catch (error) {

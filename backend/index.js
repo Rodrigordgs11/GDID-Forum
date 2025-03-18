@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { sequelize } = require('./src/config/database');
 const userRoutes = require('./src/routes/userRoutes');
+const authenticateRoutes = require('./src/routes/authenticateRoutes');
 const seed = require('./src/seeders/seed');
 require('./src/models/relationships');
 
@@ -26,6 +27,7 @@ sequelize.sync({ force: false }).then(() => {
 });
 
 app.use("/", userRoutes);
+app.use("/", authenticateRoutes);
 
 app.get("/", function(req, res) {
     return res.send("Hello World - Forum!!!");
