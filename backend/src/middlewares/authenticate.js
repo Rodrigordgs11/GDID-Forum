@@ -32,8 +32,13 @@ const authenticate = async (req, res, next) => {
         const decodedHeader = jwt.decode(token, { complete: true });
         if (!decodedHeader) throw new Error("Invalid JWT format.");
 
-        const publicKey = await getPublicKey(decodedHeader.header.kid);
-        const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+        let decoded;
+        if (!decodedHeader.header.kid) {
+            decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+        } else {
+            const publicKey = await getPublicKey(decodedHeader.header.kid);
+            decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+        }
 
         req.email = decoded.email;
         next();

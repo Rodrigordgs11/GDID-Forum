@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async function () {
+    localStorage.setItem('loginPageURL', window.location.href);
     const baseUrl = window.location.origin + window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
@@ -34,8 +35,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             } else {
                 const userRole = await getUserRole(responseData.id_token);
 
-                document.cookie = `access_token=${responseData.access_token}; path=/; SameSite=None; Secure`;
-                document.cookie = `refresh_token=${responseData.refresh_token}; path=/; SameSite=None; Secure`;
+                document.cookie = `idp_access_token=${responseData.access_token}; path=/; SameSite=None; Secure`;
+                document.cookie = `idp_refresh_token=${responseData.refresh_token}; path=/; SameSite=None; Secure`;
 
                 if (userRole === "admin") {
                     window.location.href = "http://localhost:8282/admin/index.html";
@@ -75,23 +76,6 @@ async function getUserRole(id_token) {
     }
 }
 
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const errorMessage = document.getElementById("errorMessage");
-
-    try {
-        const response = await axios.post("http://localhost:3003/login", { email, password });
-        document.cookie = `access_token=${response.data.access_token}; path=/; SameSite=None; Secure`;
-        document.cookie = `refresh_token=${response.data.refresh_token}; path=/; SameSite=None; Secure`;
-        window.location.href = "http://localhost:8282/"; 
-    } catch (error) {
-        errorMessage.textContent = error.response?.data?.error || "Login failed";
-    }
-});
-
 async function checkSSO() {
     const response = await fetch("http://localhost:3001/verify", { credentials: "include" });
     const data = await response.json();
@@ -99,6 +83,49 @@ async function checkSSO() {
     if (data.authenticated) {
         window.location.href = "http://localhost:8282/";
     } else {
-        //window.location.href = "http://localhost:8282/login";
+        //window.location.href = "http://localhost:8282/login.html";
     }
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("loginForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch("http://localhost:3003/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Login failed");
+            }
+
+            const data = await response.json();
+
+            document.cookie = `app2_access_token=${data.access_token}; path=/; SameSite=None; Secure`;
+            document.cookie = `app2_refresh_token=${data.refresh_token}; path=/; SameSite=None; Secure`;
+            
+
+            const userRole = await getUserRole(data.access_token);
+
+
+            if (userRole === "admin") {
+                window.location.href = "http://localhost:8282/admin/index.html";
+            } else if (userRole === "customer") {
+                window.location.href = "http://localhost:8282/";
+            } else {
+                window.location.href = "http://localhost:8282/login.html";
+            }
+
+        } catch (error) {
+            document.getElementById("errorMessage").innerText = "Error: " + error.message;
+        }
+    });
+});

@@ -3,7 +3,13 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function fetchUsers() {
-    const access_token = document.cookie.split(";").find((cookie) => cookie.includes("access_token")).split("=")[1];
+    let access_token;
+    if (document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token"))) {
+        access_token = document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token")).split("=")[1];
+    } else if (document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token"))) {
+        access_token = document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token")).split("=")[1];
+    }
+    
     const headers = new Headers();
     headers.append("Authorization", `Bearer ${access_token}`);
     
@@ -20,8 +26,8 @@ function fetchUsers() {
             }
         })
         .catch((error) => {
-            console.error("Error while fetching users: " + error);
-            alert("Error while fetching users: " + error);
+            console.error("Error while fetching products: " + error);
+            alert("Error while fetching products: " + error);
         });
 }
 
@@ -72,7 +78,13 @@ function createUser() {
     
     const userData = { name, email, phone, password };
 
-    const access_token = document.cookie.split(";").find((cookie) => cookie.includes("access_token")).split("=")[1];
+    let access_token;
+    if (document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token"))) {
+        access_token = document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token")).split("=")[1];
+    } else {
+        access_token = document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token")).split("=")[1];
+    }
+
     const headers = new Headers();
     headers.append("Authorization", `Bearer ${access_token}`);
     
@@ -94,7 +106,12 @@ function editUser(){
     };
 
     try {
-        const access_token = document.cookie.split(";").find((cookie) => cookie.includes("access_token")).split("=")[1];
+        let access_token;
+        if (document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token"))) {
+            access_token = document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token")).split("=")[1];
+        } else {
+            access_token = document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token")).split("=")[1];
+        }
         const headers = new Headers();
         headers.append("Authorization", `Bearer ${access_token}`);
 
@@ -112,9 +129,13 @@ function editUser(){
     }
 }
 
-
 function deleteUser(id){
-    const access_token = document.cookie.split(";").find((cookie) => cookie.includes("access_token")).split("=")[1];
+    let access_token;
+    if (document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token"))) {
+        access_token = document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token")).split("=")[1];
+    } else {
+        access_token = document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token")).split("=")[1];
+    }
     const headers = new Headers();
     headers.append("Authorization", `Bearer ${access_token}`);
     

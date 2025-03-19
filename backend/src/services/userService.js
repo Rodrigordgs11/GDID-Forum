@@ -45,8 +45,13 @@ async function getUserRole(req, res) {
         const decodedHeader = jwt.decode(token, { complete: true });
         if (!decodedHeader) return res.status(401).json({ message: "Invalid JWT format." });
 
-        const publicKey = await getPublicKey(decodedHeader.header.kid);
-        const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+        let decoded;
+        if (!decodedHeader.header.kid) {
+            decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+        } else {
+            const publicKey = await getPublicKey(decodedHeader.header.kid);
+            decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+        }
 
         let user = await Users.findOne({ where: { email: decoded.email } });
         if (!user) {
@@ -66,9 +71,6 @@ async function updateUser(req, res) {
     try {
         const { id } = req.params;
         const { name, phone } = req.body;
-        console.log("Request Body:", name, phone);
-
-        console.log("Update request received for ID:", req.params.id);
 
         const user = await Users.findByPk(id);
         if (!user) {
@@ -86,7 +88,6 @@ async function updateUser(req, res) {
 async function deleteUser(req, res) {
     try {
         const { id } = req.params;
-        console.log("Delete request received for ID:", req.params.id);
 
         const user = await Users.findByPk(id);
         if (!user) {
