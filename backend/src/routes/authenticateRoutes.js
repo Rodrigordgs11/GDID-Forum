@@ -1,7 +1,7 @@
 const express = require('express');
 const {authenticate} = require('../middlewares/authenticate');
 const checkRole = require('../middlewares/authMiddleware');
-const { login, token_refresh } = require('../services/authService');
+const { login, token_refresh, logout, getAuthMethod } = require('../services/authService');
 
 const router = express.Router();
 
@@ -14,7 +14,8 @@ router.get('/protected-admin', authenticate, checkRole("admin"), (req, res) => {
 });
 
 router.post('/login', login);
-
-router.post('/refresh-token', token_refresh);
+router.get('/refresh-token', token_refresh);
+router.get('/logout', logout);
+router.get('/auth-method', getAuthMethod);
 
 module.exports = router;

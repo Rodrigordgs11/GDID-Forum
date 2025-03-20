@@ -6,6 +6,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const authenticateRoutes = require('./src/routes/authenticateRoutes');
 const seed = require('./src/seeders/seed');
 require('./src/models/relationships');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(
 
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 sequelize.sync({ force: false }).then(() => {

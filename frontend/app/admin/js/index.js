@@ -3,24 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function protectedRoute() {
-    if (!document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token")) && !document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token"))) {
-        window.location.href = "http://localhost:8282/login.html";
-        return;
-    }
-    
-    let access_token;
-    if (document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token"))) {
-        access_token = document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token")).split("=")[1];
-    } else if (document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token"))) {
-        access_token = document.cookie.split(";").find((cookie) => cookie.includes("idp_access_token")).split("=")[1];
-    }
-
-    const headers = new Headers();
-    headers.append("Authorization", `Bearer ${access_token}`);
-
     fetch("http://localhost:3003/protected-admin", {
         method: "GET",
-        headers: headers,
+        credentials: "include",
     })
     .then((response) => {
         if (response.status === 403) {
@@ -41,23 +26,17 @@ function protectedRoute() {
     });
 }
 
-async function token_refresh(refresh_token) {
+async function token_refresh() {
     console.log("Refreshing token...");
     try {
-        fetch("http://host.docker.internal:3001/oauth/refresh-token", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ refresh_token: refresh_token }),
+        fetch("http://localhost:3001/oauth/refresh-token", {
+            method: "GET",
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((data) => {
             if (data.error) {
                 alert("Error while refreshing token: " + data.error);
-            } else {
-                document.cookie = `idp_access_token=${data.access_token}; path=/; SameSite=None; Secure`;
-                document.cookie = `idp_refresh_token=${data.refresh_token}; path=/; SameSite=None; Secure`;
             }
         })
     } catch (error) {
@@ -68,80 +47,95 @@ async function token_refresh(refresh_token) {
     return false;
 }
 
-async function refresh_token_withouth_idp(refresh_token) {
+async function refresh_token_withouth_idp() {
     console.log("Refreshing token without IDP...");
     try {
         fetch("http://localhost:3003/refresh-token", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ refresh_token: refresh_token }),
+            method: "GET",
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((data) => {
             if (data.error) {
                 alert("Error while refreshing token without IDP: " + data.error);
-            } else {
-                document.cookie = `app2_access_token=${data.access_token}; path=/; SameSite=None; Secure`;
-                document.cookie = `app2_refresh_token=${data.refresh_token}; path=/; SameSite=None; Secure`;
             }
         })
     } catch (error) {
         alert("Error while refreshing token without IDP: " + error);
         return false;
     }
-
     return false;
-    
+}
+
+async function getAuthMethods() {
+    try {
+        const response = await fetch("http://localhost:3003/auth-method", {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert("Error while fetching auth methods: " + data.error);
+        } else {
+            return data.method;
+        }
+    } catch (error) {
+        alert("Error while fetching auth methods: " + error);
+    }
 }
 
 setInterval(async function () {
-    if (document.cookie.split(";").find((cookie) => cookie.includes("app2_refresh_token"))) {
-        const refresh_token = document.cookie.split(";").find((cookie) => cookie.includes("app2_refresh_token")).split("=")[1];
-        refresh_token_withouth_idp(refresh_token);
+    const authMethods = await getAuthMethods();
+    console.log("Auth methods: " + authMethods);
+    if (authMethods === "idp") {
+        token_refresh();
     } else {
-        const refresh_token = document.cookie.split(";").find((cookie) => cookie.includes("idp_refresh_token")).split("=")[1];
-        token_refresh(refresh_token);
+        refresh_token_withouth_idp();
     }
-}, 300000);
+}, 290000);
 
-function logout() {
-    if (document.cookie.split(";").find((cookie) => cookie.includes("app2_access_token"))) {
-        document.cookie = "app2_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure";
-        document.cookie = "app2_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure";
-        window.location.href = "http://localhost:8282/login.html";
+async function logout() {
+    const authMethods = await getAuthMethods();
+    if (authMethods === "idp") {
+        logoutWithIDP();
     } else {
-        const accessTokenCookie = document.cookie.split(";").find(row => row.includes("idp_access_token"));
-        
-        if (!accessTokenCookie) {
-            alert("No access token found, redirecting to login...");
+        logoutWithoutIDP();
+    }
+}
+
+
+function logoutWithIDP() {
+    fetch("http://localhost:3001/logout", {
+        method: "GET",
+        credentials: "include",
+    })
+    .then((response) => {
+        if (response.ok) {
             window.location.href = "http://localhost:8282/login.html";
-            return;
+        } else {
+            alert("Error while logging out: " + response.statusText);
         }
+    })
+    .catch((error) => {
+        alert("Error while logging out: " + error);
+    });
+}
 
-        const access_token = accessTokenCookie.split("=")[1];
-
-        fetch(`http://localhost:3001/logout`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${access_token}`,
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Logout request failed");
-            }
-            return response.json();
-        })
-        .then(() => {
-            document.cookie = "aidp_ccess_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure";
-            document.cookie = "idp_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure";
-
+function logoutWithoutIDP() {
+    fetch("http://localhost:3003/logout", {
+        method: "GET",
+        credentials: "include",
+    })
+    .then((response) => {
+        if (response.ok) {
             window.location.href = "http://localhost:8282/login.html";
-        })
-        .catch(error => {
-            alert("Error while logging out: " + error);
-        });
-    }
+        } else {
+            alert("Error while logging out: " + response.statusText);
+        }
+    })
+    .catch((error) => {
+        alert("Error while logging out: " + error);
+    });
 }

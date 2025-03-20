@@ -63,7 +63,62 @@ async function getUserRole(req, res) {
         return res.json({ role: userRole.name });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Error fetching user role" });
+        return res.status(500).json({ message: "Error fetching user role" }); 
+    }
+}
+
+async function getUser(req, res) {
+    try {
+        const token = req.app2_cookies.access_token || req.cookies.access_token;
+        if (!token) return res.status(401).json({ message: "Token not provided." });
+
+        const decodedHeader = jwt.decode(token, { complete: true });
+        if (!decodedHeader) return res.status(401).json({ message: "Invalid JWT format." });
+
+        let decoded;
+        if (!decodedHeader.header.kid) {
+            decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+        } else {
+            const publicKey = await getPublicKey(decodedHeader.header.kid);
+            decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+        }
+
+        const user = await Users.findOne({ where: { email: decoded.email } });
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        return res.json(user);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error fetching user data" });
+    }
+}
+
+async function updateUserProfile(req, res) {
+    try {
+        const token = req.cookies.app2_access_token || req.cookies.access_token;
+        if (!token) return res.status(401).json({ message: "Token not provided." });
+
+        const decodedHeader = jwt.decode(token, { complete: true });
+        if (!decodedHeader) return res.status(401).json({ message: "Invalid JWT format." });
+
+        let decoded;
+        if (!decodedHeader.header.kid) {
+            decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+        } else {
+            const publicKey = await getPublicKey(decodedHeader.header.kid);
+            decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+        }
+
+        const user = await Users.findOne({ where: { email: decoded.email } });
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        const { name, phone } = req.body;
+        await user.update({ name, phone });
+
+        return res.json(user);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error updating user data" });
     }
 }
 
@@ -71,6 +126,9 @@ async function updateUser(req, res) {
     try {
         const { id } = req.params;
         const { name, phone } = req.body;
+        console.log("Request Body:", name, phone);
+
+        console.log("Update request received for ID:", req.params.id);
 
         const user = await Users.findByPk(id);
         if (!user) {
@@ -88,6 +146,7 @@ async function updateUser(req, res) {
 async function deleteUser(req, res) {
     try {
         const { id } = req.params;
+        console.log("Delete request received for ID:", req.params.id);
 
         const user = await Users.findByPk(id);
         if (!user) {
@@ -102,4 +161,4 @@ async function deleteUser(req, res) {
     }
 }
 
-module.exports = { createUser, getUsers, getUserRole, updateUser, deleteUser };
+module.exports = { createUser, getUsers, getUserRole, getUser, updateUserProfile, updateUser, deleteUser };

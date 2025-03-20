@@ -26,7 +26,7 @@ const getPublicKey = async (kid) => {
 
 const authenticate = async (req, res, next) => {
     try {
-        const token = req.header("Authorization")?.replace("Bearer ", "");
+        const token = req.cookies.app2_access_token || req.cookies.access_token;
         if (!token) throw new Error("Token not provided.");
 
         const decodedHeader = jwt.decode(token, { complete: true });

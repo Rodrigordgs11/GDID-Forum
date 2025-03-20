@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify(data),
             });
 
@@ -34,10 +35,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 alert("Error while exchanging code for token: " + responseData.error);
             } else {
                 const userRole = await getUserRole(responseData.id_token);
-
-                document.cookie = `idp_access_token=${responseData.access_token}; path=/; SameSite=None; Secure`;
-                document.cookie = `idp_refresh_token=${responseData.refresh_token}; path=/; SameSite=None; Secure`;
-
+                
                 if (userRole === "admin") {
                     window.location.href = "http://localhost:8282/admin/index.html";
                 } else if (userRole === "customer") {
@@ -81,7 +79,12 @@ async function checkSSO() {
     const data = await response.json();
 
     if (data.authenticated) {
-        window.location.href = "http://localhost:8282/";
+        const userRole = await getUserRole(data.token);
+        if (userRole === "admin") {
+            window.location.href = "http://localhost:8282/admin/index.html";
+        } else if (userRole === "customer") {
+            window.location.href = "http://localhost:8282/";
+        }
     } else {
         //window.location.href = "http://localhost:8282/login.html";
     }
@@ -109,12 +112,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const data = await response.json();
 
-            document.cookie = `app2_access_token=${data.access_token}; path=/; SameSite=None; Secure`;
-            document.cookie = `app2_refresh_token=${data.refresh_token}; path=/; SameSite=None; Secure`;
-            
-
             const userRole = await getUserRole(data.access_token);
-
+            alert(userRole); 
 
             if (userRole === "admin") {
                 window.location.href = "http://localhost:8282/admin/index.html";
