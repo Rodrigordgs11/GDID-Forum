@@ -7,8 +7,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     const client_id = urlParams.get("client_id");
     const client_secret = urlParams.get("client_secret");
 
-    const codeVerifier = document.cookie.split(";").find((cookie) => cookie.includes("code_verifier")).split("=")[1];
-    document.cookie = "code_verifier=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    let codeVerifier = null;
+    if (document.cookie.includes("code_verifier")) {
+        codeVerifier = document.cookie.split(";").find((cookie) => cookie.includes("code_verifier")).split("=")[1];
+        document.cookie = "code_verifier=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
 
     checkSSO();
 
