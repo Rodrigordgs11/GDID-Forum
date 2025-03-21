@@ -7,6 +7,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     const client_id = urlParams.get("client_id");
     const client_secret = urlParams.get("client_secret");
 
+    const codeVerifier = document.cookie.split(";").find((cookie) => cookie.includes("code_verifier")).split("=")[1];
+    document.cookie = "code_verifier=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
     checkSSO();
 
     if (code) {
@@ -15,6 +18,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             client_id: client_id,
             client_secret: client_secret,
             redirect_uri: baseUrl,
+            code_verifier: codeVerifier
         };
 
         try {
@@ -113,7 +117,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
 
             const userRole = await getUserRole(data.access_token);
-            alert(userRole); 
 
             if (userRole === "admin") {
                 window.location.href = "http://localhost:8282/admin/index.html";

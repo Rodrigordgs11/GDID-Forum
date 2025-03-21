@@ -7,7 +7,7 @@ const Users = sequelize.define("Users", {
     email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: {isEmail: true} },
     name: { type: DataTypes.STRING, allowNull: false },
     phone: { type: DataTypes.STRING, allowNull: false, validate: {isNumeric: true} },
-    password: { type: DataTypes.STRING, allowNull: false, defaultValue: "DeviceForum" },
+    password: { type: DataTypes.STRING, allowNull: false, defaultValue: "Mobile Nation" },
   });
 
 Users.beforeCreate(async (user) => {
